@@ -50,21 +50,35 @@ local shroom = {
     --g.rectangle( "line", self.x, self.y, 10, 10 )
     g.push()
     g.translate( self.x, self.y )
+    if self.finger then
+      g.setColor( colors.red )
+    else
+      g.setColor( colors.black )
+    end
     self.model:draw(1)
+    g.translate( 20, 20 )
+    --g.print( self.x .. ", " .. self.y )
     g.pop()
   end
 }
+
 local shroom_mt = { __index = shroom }
 
 for i = 1, 100 do
   local rnd = love.math.random
   local m = model:new()
-  m:addVertex( rnd( 10 ), rnd( 10 ), rnd( 10 ))
+  local function vgen()
+    return rnd( 20 ) - 10,
+    rnd( 20 ) - 10,
+    rnd( 20 ) -10
+  end
+  m:addVertex( vgen() )
   for n = 2, 7 do
-    m:addVertex( rnd( 10 ), rnd( 10 ), rnd( 10 ))
+    m:addVertex( vgen() )
     m:addLine( n-1, n )
   end
   local s = {
+    finger = false,
     x = rnd( 5000 ) - 2500,
     y = rnd( 5000 ) - 2500,
     model = m
@@ -80,25 +94,16 @@ love.load = function()
   g.setLineWidth( 1 )
 end
 
-local angle = 0 -- temp/debug rotation of player
-
-love.update = function( dt )
-  dangle = ( dt * math.pi / 3 )
-  angle = angle + dangle
-  player:update( dt )
-  player.model:rotate( 0, 0, dangle )
-end
-
 local viewscale = 1 -- scaling viewport
 
 local mousebuttons = {
   ["wd"] = function() 
     viewscale = viewscale * 1.5
-    --console.log( viewscale )
+    console.log( viewscale )
   end,
   ["wu"] = function() 
     viewscale = viewscale / 1.5
-    --console.log( viewscale )
+    console.log( viewscale )
   end
 }
 
@@ -106,6 +111,21 @@ love.mousepressed = function( x, y, button )
   if type( mousebuttons[ button ]) == "function" then
       mousebuttons[ button ]()
   end
+end
+
+local finger = {
+  x = 0,
+  y = 0,
+  dx = 0,
+  dy = 0
+}
+
+love.mousemoved = function( x, y, dx, dy )
+  finger.x = player.x +((( x - 400 ) / viewscale ) * 2 ) -- *2 because view follows mouse
+  finger.y = player.y +((( y - 400 ) / viewscale ) * 2 ) 
+  finger.dx = dx
+  finger.dy = dy
+  --console.log( finger.x .. ", " .. finger.y )
 end
 
 local keys = {
@@ -128,6 +148,30 @@ love.keyreleased = function( key )
     player.ydir = 0
   end
 end  
+
+local angle = 0 -- temp/debug rotation of player
+
+love.update = function( dt )
+  dangle = ( dt * math.pi / 3 )
+  angle = angle + dangle
+  player:update( dt )
+  --player.model:rotate( 0, 0, dangle )
+  for i, shroom in ipairs( shroomlist ) do
+    --shroom.model:rotate( .03, 0, 0 )
+    if (( finger.x <= shroom.x + 10 ) and
+        ( finger.x >= shroom.x - 10 ) and
+        ( finger.y <= shroom.y + 10 ) and
+      ( finger.y >= shroom.y - 10 )) then
+      shroom.finger = true
+      shroom.model:rotate( finger.dy / 10, 
+                           finger.dx / 10, 0 )
+    else
+      shroom.finger = false
+    end
+  end
+  finger.dx = 0
+  finger.dy = 0
+end
 
 love.draw = function()
   g.push()
