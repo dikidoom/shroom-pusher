@@ -57,11 +57,11 @@ local viewscale = 1 -- scaling viewport
 local mousebuttons = {
   ["wd"] = function() 
     viewscale = viewscale * 1.5
-    console.log( viewscale )
+    --console.log( viewscale )
   end,
   ["wu"] = function() 
     viewscale = viewscale / 1.5
-    console.log( viewscale )
+    --console.log( viewscale )
   end
 }
 
@@ -73,7 +73,8 @@ end
 
 love.draw = function()
   g.push()
-  g.translate( 400, 400 ) -- scale from center
+  g.translate( 800 - love.mouse.getX(),
+               800 - love.mouse.getY()) -- scale from mouse cursor
   g.scale( viewscale ) 
   g.setLineWidth( 1.0 / viewscale ) -- keep lines 1px thick
   g.setColor( colors.black )
