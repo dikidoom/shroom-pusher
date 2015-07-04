@@ -12,25 +12,6 @@ colors = {
   red = { 156, 95, 80 },
   blue = { 99, 167, 194 }}
 
-local cube = {
-  { -1, 1, -1 },
-  { 1, 1, -1 },
-  { 1, -1, -1 },
-  { -1, -1, -1 },
-  { -1, -1, 1 },
-  { 1, -1, 1 },
-  { 1, 1, 1 },
-  { -1, 1, 1 }}
-
-local function draw3d( obj, scale )
-  lst = {}
-  for i = 1, #obj-1 do
-    v1, v2 = obj[i], obj[i+1]
-    g.line( v1[1] * scale, v1[2] * scale,
-            v2[1] * scale, v2[2] * scale )
-  end
-end
-
 local function rotateObject( lst, angle )
   ret = {}
   for i, vec in pairs( lst ) do
@@ -39,21 +20,22 @@ local function rotateObject( lst, angle )
   return ret
 end
 
-local fpsize = 300
-local fatplane = model.new()
-for i = 1, fpsize, 1 do
-  v1, v2 = fatplane:addVertex({ 1, 0, i }), fatplane:addVertex({ fpsize, 0, i })
-  fatplane:addLine( v1, v2 )
-  v1, v2 = fatplane:addVertex({ i, 1, 0 }), fatplane:addVertex({ i, fpsize, 0 })
-  fatplane:addLine( v1, v2 )
-  v1, v2 = fatplane:addVertex({ 0, i, 1 }), fatplane:addVertex({ 0, i, fpsize })
-  fatplane:addLine( v1, v2 )
-end
+local player = {
+  x = 0,
+  y = 0,
+  model = model:new(),
+  draw = function( self ) self.model:draw( 100 ) end
+}
 
-local test = model.new()
-for i = 1, 100 do
-  v1, v2 = test:addVertex({ i, 0, -i }), test:addVertex({ i, 100, -i })
-  test:addLine( v1, v2 )
+do
+  local v1, v2, v3, v4 = player.model:addVertex( -1, -1, 0 ),
+  player.model:addVertex( -1, 1, 0 ),
+  player.model:addVertex( 1, 1, 0 ),
+  player.model:addVertex( 1, -1, 0 )
+  player.model:addLine( v1, v2 )
+  player.model:addLine( v2, v3 )
+  player.model:addLine( v3, v4 )
+  player.model:addLine( v4, v1 )
 end
 
 love.load = function()
@@ -62,48 +44,41 @@ love.load = function()
   g.setLineWidth( 1 )
 end
 
-local angle = 0
+local angle = 0 -- temp/debug rotation of player
 
 love.update = function( dt )
   dangle = ( dt * math.pi / 3 )
   angle = angle + dangle
-  fatplane:rotate({ dangle, dangle * .8, dangle * -.3 })
-  test:rotate({ dangle, dangle / 3.0, 0 })
-  cube1 = rotateObject( cube, { angle, 0, math.pi / 8 })
-  cube2 = rotateObject( cube, { math.pi / 8, angle, 0 })
-  cube3 = rotateObject( cube, { 0, math.pi / 8, angle })
+  player.model:rotate( 0, 0, dangle )
+end
+
+local viewscale = 1 -- scaling viewport
+
+local mousebuttons = {
+  ["wd"] = function() 
+    viewscale = viewscale * 1.5
+    console.log( viewscale )
+  end,
+  ["wu"] = function() 
+    viewscale = viewscale / 1.5
+    console.log( viewscale )
+  end
+}
+
+love.mousepressed = function( x, y, button )
+  if type( mousebuttons[ button ]) == "function" then
+      mousebuttons[ button ]()
+  end
 end
 
 love.draw = function()
+  g.push()
+  g.translate( 400, 400 ) -- scale from center
+  g.scale( viewscale ) 
+  g.setLineWidth( 1.0 / viewscale ) -- keep lines 1px thick
   g.setColor( colors.black )
-
-  -- 4 cubes
-  g.push()
-  g.translate( 200, 200 )
-  draw3d( cube1, 100 )
+  player:draw()
   g.pop()
-
-  g.push()
-  g.translate( 600, 200 )
-  draw3d( cube2, 100 )
-  g.pop()
-
-  g.push()
-  g.translate( 200, 600 )
-  draw3d( cube3, 100 )
-  g.pop()
-
-  -- a plane
-  g.push()
-  g.translate( 400, 400 )
-  fatplane:draw( 2 )
-  g.pop()
-
-  -- testing model uniqueness
-  g.push()
-  g.translate( 200, 400 )
-  test:draw( 2 )
-  g.pop()
-
+  --
   console.draw()
 end

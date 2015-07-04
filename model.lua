@@ -4,8 +4,8 @@ local matrix = require( 'matrix' )
 
 local function draw( self, scale )
   for i = 1, #self.lines do
-    l = self.lines[i] 
-    v1, v2 = self.vertices[l[1]], self.vertices[l[2]]
+    local l = self.lines[i] 
+    local v1, v2 = self.vertices[l[1]], self.vertices[l[2]]
     p1x, p1y = v1[1], v1[2]
     p2x, p2y = v2[1], v2[2]
     love.graphics.line( p1x * scale, 
@@ -15,8 +15,8 @@ local function draw( self, scale )
   end
 end
 
-local function addVertex( self, v )
-  table.insert( self.vertices, v )
+local function addVertex( self, v1, v2, v3 )
+  table.insert( self.vertices, {v1, v2, v3})
   return #self.vertices
 end
 
@@ -25,10 +25,10 @@ local function addLine( self, i1, i2 )
   return #self.lines
 end
 
-local function rotate( self, angles )
+local function rotate( self, a1, a2, a3 )
   lst = {}
   for i = 1, #self.vertices do
-    table.insert( lst, matrix.rotate( self.vertices[i], angles ))
+    table.insert( lst, matrix.rotate( self.vertices[i], {a1, a2, a3} ))
   end
   self.vertices = lst
 end
