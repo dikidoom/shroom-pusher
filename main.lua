@@ -47,14 +47,13 @@ end
 local shroomlist = {}
 local shroom = {
   draw = function( self )
-    --g.rectangle( "line", self.x, self.y, 10, 10 )
     g.push()
     g.translate( self.x, self.y )
-    if self.finger then
-      g.setColor( colors.red )
-    else
-      g.setColor( colors.black )
-    end
+    -- if self.finger then
+    --   g.setColor( colors.red )
+    -- else
+    --   g.setColor( colors.black )
+    -- end
     self.model:draw(1)
     g.translate( 20, 20 )
     --g.print( self.x .. ", " .. self.y )
@@ -64,10 +63,10 @@ local shroom = {
 
 local shroom_mt = { __index = shroom }
 
-for i = 1, 100 do
+for i = 1, 100 do -- populate shrooms
   local rnd = love.math.random
   local m = model:new()
-  local function vgen()
+  local function vgen() -- test/debug return random vertex
     return rnd( 20 ) - 10,
     rnd( 20 ) - 10,
     rnd( 20 ) -10
@@ -78,7 +77,7 @@ for i = 1, 100 do
     m:addLine( n-1, n )
   end
   local s = {
-    finger = false,
+    --finger = false,
     x = rnd( 5000 ) - 2500,
     y = rnd( 5000 ) - 2500,
     model = m
@@ -98,12 +97,12 @@ local viewscale = 1 -- scaling viewport
 
 local mousebuttons = {
   ["wd"] = function() 
-    viewscale = viewscale * 1.5
-    console.log( viewscale )
+    viewscale = viewscale * 3
+    --console.log( viewscale )
   end,
   ["wu"] = function() 
-    viewscale = viewscale / 1.5
-    console.log( viewscale )
+    viewscale = viewscale / 3
+    --console.log( viewscale )
   end
 }
 
@@ -162,11 +161,11 @@ love.update = function( dt )
         ( finger.x >= shroom.x - 10 ) and
         ( finger.y <= shroom.y + 10 ) and
       ( finger.y >= shroom.y - 10 )) then
-      shroom.finger = true
+      --shroom.finger = true
       shroom.model:rotate( finger.dy / 10, 
                            finger.dx / 10, 0 )
-    else
-      shroom.finger = false
+    -- else
+    --   shroom.finger = false
     end
   end
   finger.dx = 0
