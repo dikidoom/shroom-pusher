@@ -34,14 +34,15 @@ local player = {
 }
 
 do -- create player model
-  local v1, v2, v3, v4 = player.model:addVertex( -1, -1, 0 ),
-  player.model:addVertex( -1, 1, 0 ),
-  player.model:addVertex( 1, 1, 0 ),
-  player.model:addVertex( 1, -1, 0 )
-  player.model:addLine( v1, v2 )
-  player.model:addLine( v2, v3 )
-  player.model:addLine( v3, v4 )
-  player.model:addLine( v4, v1 )
+  -- local v1, v2, v3, v4 = player.model:addVertex( -1, -1, 0 ),
+  -- player.model:addVertex( -1, 1, 0 ),
+  -- player.model:addVertex( 1, 1, 0 ),
+  -- player.model:addVertex( 1, -1, 0 )
+  -- player.model:addLine( v1, v2 )
+  -- player.model:addLine( v2, v3 )
+  -- player.model:addLine( v3, v4 )
+  -- player.model:addLine( v4, v1 )
+  generator.con.pairs( generator.gen.circular( 20, 1 ), player.model)
 end
 
 --============================================================ shrooms
