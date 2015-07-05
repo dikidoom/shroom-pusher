@@ -3,6 +3,7 @@ g = love.graphics
 console = require( 'console' )
 local matrix = require( 'matrix' )
 local model = require( 'model' )
+local generator = require( 'generator' )
 
 colors = {
   black = { 0, 0, 0 },
@@ -66,16 +67,8 @@ local shroom_mt = { __index = shroom }
 for i = 1, 100 do -- populate shrooms
   local rnd = love.math.random
   local m = model:new()
-  local function vgen() -- test/debug return random vertex
-    return rnd( 20 ) - 10,
-    rnd( 20 ) - 10,
-    rnd( 20 ) -10
-  end
-  m:addVertex( vgen() )
-  for n = 2, 7 do
-    m:addVertex( vgen() )
-    m:addLine( n-1, n )
-  end
+  generator.con.first2rest( generator.gen.random( 10, 20 ), m )
+  generator.con.loop( generator.gen.circular( 10, 20 ), m )
   local s = {
     --finger = false,
     x = rnd( 5000 ) - 2500,
@@ -122,8 +115,8 @@ local finger = {
 love.mousemoved = function( x, y, dx, dy )
   finger.x = player.x +((( x - 400 ) / viewscale ) * 2 ) -- *2 because view follows mouse
   finger.y = player.y +((( y - 400 ) / viewscale ) * 2 ) 
-  finger.dx = dx
-  finger.dy = dy
+  finger.dx = dx / viewscale
+  finger.dy = dy / viewscale
   --console.log( finger.x .. ", " .. finger.y )
 end
 
@@ -154,18 +147,15 @@ love.update = function( dt )
   dangle = ( dt * math.pi / 3 )
   angle = angle + dangle
   player:update( dt )
-  --player.model:rotate( 0, 0, dangle )
   for i, shroom in ipairs( shroomlist ) do
-    --shroom.model:rotate( .03, 0, 0 )
     if (( finger.x <= shroom.x + 10 ) and
         ( finger.x >= shroom.x - 10 ) and
         ( finger.y <= shroom.y + 10 ) and
       ( finger.y >= shroom.y - 10 )) then
-      --shroom.finger = true
-      shroom.model:rotate( finger.dy / 10, 
+      shroom.x = shroom.x + finger.dx * 2
+      shroom.y = shroom.y + finger.dy * 2
+      shroom.model:rotate( finger.dy / -10, 
                            finger.dx / 10, 0 )
-    -- else
-    --   shroom.finger = false
     end
   end
   finger.dx = 0
