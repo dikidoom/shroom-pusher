@@ -61,4 +61,13 @@ function m.con.loop( vlst, model )
   return model
 end
 
+function m.con.pairs( vlst, model )
+  local is = introduce( vlst, model )
+  for i = 2, #is, 2 do
+    model:addLine( is[i-1], is[i] )
+  end
+  return model
+end
+  
+
 return m

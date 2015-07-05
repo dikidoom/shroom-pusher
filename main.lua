@@ -67,7 +67,13 @@ local shroom_mt = { __index = shroom }
 for i = 1, 100 do -- populate shrooms
   local rnd = love.math.random
   local m = model:new()
-  generator.con.first2rest( generator.gen.random( 10, 20 ), m )
+  local bush
+  if rnd() > .5 then
+    bush = generator.con.first2rest
+  else
+    bush = generator.con.pairs
+  end
+  bush( generator.gen.random( 10, 20 ), m )
   generator.con.loop( generator.gen.circular( 10, 20 ), m )
   local s = {
     --finger = false,
@@ -79,7 +85,26 @@ for i = 1, 100 do -- populate shrooms
   table.insert( shroomlist, s )
 end
 
+local function pick( x, y, tolerance )
+  for i, shroom in ipairs( shroomlist ) do
+    if (( x <= shroom.x + tolerance ) and
+        ( x >= shroom.x - tolerance ) and
+        ( y <= shroom.y + tolerance ) and
+      ( y >= shroom.y - tolerance )) then
+      return shroom
+    end
+  end
+  return nil
+end  
+
 --============================================================ love
+local finger = { -- store mouse position in world space
+  x = 0,
+  y = 0,
+  dx = 0,
+  dy = 0
+}
+
 love.load = function()
   g.setBackgroundColor( colors.white )
   g.setLineStyle( "rough" )
@@ -88,13 +113,31 @@ end
 
 local viewscale = 1 -- scaling viewport
 
+local grab = { -- grab shrooms with finger
+  grab = false,
+  shroom = nil,
+  xoffset = 0,
+  yoffset = 0
+}
+
 local mousebuttons = {
+  ["l"] = function()
+    if not grab.grab then
+      grab.grab = true
+      local s = pick( finger.x, finger.y, 20 )
+      if s then 
+        grab.shroom = s 
+        grab.xoffset = s.x - finger.x
+        grab.yoffset = s.y - finger.y
+      end
+    end
+  end,
   ["wd"] = function() 
-    viewscale = viewscale * 3
+    viewscale = math.min( viewscale * 3, 3 )
     --console.log( viewscale )
   end,
   ["wu"] = function() 
-    viewscale = viewscale / 3
+    viewscale = math.max( viewscale / 3, 1.0/9.0 )
     --console.log( viewscale )
   end
 }
@@ -105,12 +148,9 @@ love.mousepressed = function( x, y, button )
   end
 end
 
-local finger = {
-  x = 0,
-  y = 0,
-  dx = 0,
-  dy = 0
-}
+love.mousereleased = function()
+  grab.grab = false
+end
 
 love.mousemoved = function( x, y, dx, dy )
   finger.x = player.x +((( x - 400 ) / viewscale ) * 2 ) -- *2 because view follows mouse
@@ -147,11 +187,12 @@ love.update = function( dt )
   dangle = ( dt * math.pi / 3 )
   angle = angle + dangle
   player:update( dt )
-  for i, shroom in ipairs( shroomlist ) do
-    if (( finger.x <= shroom.x + 10 ) and
-        ( finger.x >= shroom.x - 10 ) and
-        ( finger.y <= shroom.y + 10 ) and
-      ( finger.y >= shroom.y - 10 )) then
+  if ( grab.grab and grab.shroom ) then
+    grab.shroom.x = finger.x + grab.xoffset
+    grab.shroom.y = finger.y + grab.yoffset
+  else
+    local shroom = pick( finger.x, finger.y, 10 )
+    if shroom then
       shroom.x = shroom.x + finger.dx * 2
       shroom.y = shroom.y + finger.dy * 2
       shroom.model:rotate( finger.dy / -10, 
